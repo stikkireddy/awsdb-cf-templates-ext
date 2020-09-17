@@ -6,19 +6,24 @@
 			"Default": "111111111111",
 			"Description": "Databricks AWS account that should be allowed to access the KMS key",
 			"Type": "String"
-		},
+        },
+        "CloudformationAssumedRole": {
+			"Default": "arn:aws:sts::.......:assumed-role/......./.........",
+			"Description": "The role that cloud formation is assuming to create the key",
+			"Type": "String"
+        },
 		"KeyDescription": {
 			"Default": "KMS Key used by Databricks to encrypt/decrypt the notebooks for a workspace",
 			"Description": "Description for what this KMS key is to intended for",
 			"Type": "String"
 		},
 		"KeyAliasSuffix": {
-			"Default": "databricks-e2-byok-key",
+			"Default": "sri-e2-byok-key",
 			"Description": "Suffix for the KMS Key Alias required as a reference by Databricks. A random sequence is added to this suffix later.",
 			"Type": "String"
 		},
 		"OwnerTagValue": {
-			"Default": "abhinav.garg@databricks.com",
+			"Default": "sri@databricks.com",
 			"Description": "Value for the owner tag",
 			"Type": "String"
 		}
@@ -37,12 +42,36 @@
 						"Effect": "Allow",
 						"Principal": {
 							"AWS": {
+								"Ref": "CloudformationAssumedRole"
+							}
+						},
+						"Action": [
+						    "kms:Create*",
+						    "kms:Describe*",
+						    "kms:Enable*",
+						    "kms:List*",
+						    "kms:Put*",
+						    "kms:Update*",
+						    "kms:Revoke*",
+						    "kms:Disable*",
+						    "kms:Get*",
+						    "kms:Delete*",
+						    "kms:ScheduleKeyDeletion",
+						    "kms:CancelKeyDeletion"
+						],
+						"Resource": "*"
+					    }, 
+					    {
+						"Sid": "Enable Owner Account Permissions",
+						"Effect": "Allow",
+						"Principal": {
+							"AWS": {
 								"Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
 							}
 						},
 						"Action": "kms:*",
 						"Resource": "*"
-					}, {
+					    }, {
 						"Sid": "Allow Databricks to use KMS key for BYOK",
 						"Effect": "Allow",
 						"Principal": {
@@ -55,7 +84,7 @@
 							"kms:Decrypt"
 						],
 						"Resource": "*"
-					}]
+					   }]
 				},
 				"Tags": [{
 					"Key": "owner",
